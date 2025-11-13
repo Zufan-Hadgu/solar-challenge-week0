@@ -37,7 +37,22 @@ def load_data(country):
         
         return df
     except Exception as e:
-        st.error(f"Error loading data for {country}: {str(e)}")
+        # Return None if file not found (for upload mode)
+        return None
+
+def load_data_from_upload(uploaded_file, country_name):
+    """Load data from uploaded file"""
+    try:
+        df = pd.read_csv(uploaded_file)
+        df['Country'] = country_name
+        
+        # Convert Timestamp to datetime
+        if 'Timestamp' in df.columns:
+            df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+        
+        return df
+    except Exception as e:
+        st.error(f"Error loading uploaded file: {str(e)}")
         return None
 
 @st.cache_data
