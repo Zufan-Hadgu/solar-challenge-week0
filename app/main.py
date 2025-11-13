@@ -52,6 +52,52 @@ st.markdown("""
 st.sidebar.title("🎛️ Dashboard Controls")
 st.sidebar.markdown("---")
 
+# File Upload Section
+st.sidebar.subheader("📁 Data Source")
+data_source = st.sidebar.radio(
+    "Choose Data Source",
+    ["Local Files", "Upload Files"],
+    help="Select how to load the data"
+)
+
+uploaded_data = {}
+
+if data_source == "Upload Files":
+    st.sidebar.markdown("**Upload CSV Files:**")
+    
+    uploaded_benin = st.sidebar.file_uploader(
+        "Benin CSV",
+        type=['csv'],
+        key="benin",
+        help="Upload benin_clean.csv"
+    )
+    
+    uploaded_sierra = st.sidebar.file_uploader(
+        "Sierra Leone CSV",
+        type=['csv'],
+        key="sierra",
+        help="Upload sierraleone_clean.csv"
+    )
+    
+    uploaded_togo = st.sidebar.file_uploader(
+        "Togo CSV",
+        type=['csv'],
+        key="togo",
+        help="Upload togo-dapaong_qc.csv"
+    )
+    
+    if uploaded_benin:
+        uploaded_data["Benin"] = utils.load_data_from_upload(uploaded_benin, "Benin")
+    if uploaded_sierra:
+        uploaded_data["Sierra Leone"] = utils.load_data_from_upload(uploaded_sierra, "Sierra Leone")
+    if uploaded_togo:
+        uploaded_data["Togo"] = utils.load_data_from_upload(uploaded_togo, "Togo")
+    
+    if uploaded_data:
+        st.sidebar.success(f"✅ {len(uploaded_data)} file(s) uploaded successfully!")
+
+st.sidebar.markdown("---")
+
 # Country Selection
 view_option = st.sidebar.radio(
     "Select View",
@@ -65,10 +111,26 @@ if view_option == "Single Country":
         ["Benin", "Sierra Leone", "Togo"],
         help="Choose a country to analyze"
     )
-    df = utils.load_data(selected_country)
+    
+    # Load data from upload or local
+    if data_source == "Upload Files":
+        df = uploaded_data.get(selected_country, None)
+        if df is None:
+            st.warning(f"⚠️ Please upload {selected_country} CSV file in the sidebar.")
+    else:
+        df = utils.load_data(selected_country)
 else:
     selected_country = "All Countries"
-    df = utils.load_all_countries()
+    
+    # Load data from upload or local
+    if data_source == "Upload Files":
+        if len(uploaded_data) > 0:
+            df = pd.concat(list(uploaded_data.values()), ignore_index=True)
+        else:
+            df = None
+            st.warning("⚠️ Please upload at least one CSV file in the sidebar.")
+    else:
+        df = utils.load_all_countries()
 
 # Metric Selection
 selected_metric = st.sidebar.selectbox(
@@ -295,13 +357,28 @@ if df is not None and len(df) > 0:
         )
 
 else:
-    st.error("❌ Unable to load data. Please check that the data files exist in the '../data/' directory.")
-    st.info("""
-    Expected files:
-    - ../data/benin_clean.csv
-    - ../data/sierraleone_clean.csv
-    - ../data/togo-dapaong_qc.csv
-    """)
+    st.error("❌ No data available to display.")
+    
+    if data_source == "Local Files":
+        st.info("""
+        **Local files not found.**
+        
+        Please switch to **"Upload Files"** mode in the sidebar and upload your CSV files:
+        - benin_clean.csv
+        - sierraleone_clean.csv
+        - togo-dapaong_qc.csv
+        """)
+    else:
+        st.info("""
+        **Please upload CSV files using the sidebar.**
+        
+        Expected files:
+        - benin_clean.csv (for Benin data)
+        - sierraleone_clean.csv (for Sierra Leone data)
+        - togo-dapaong_qc.csv (for Togo data)
+        
+        You can upload one or more files to start analyzing.
+        """)
 
 # Footer
 st.markdown("---")
