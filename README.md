@@ -1,6 +1,6 @@
-# ☀️ Solar Data Discovery - Week 0 Challenge
+# Solar Data Discovery 
 
-**10 Academy: Artificial Intelligence Mastery Program**
+
 
 A comprehensive exploratory data analysis (EDA) and visualization project analyzing solar irradiance data from three West African countries: Benin, Sierra Leone, and Togo.
 
